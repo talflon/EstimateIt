@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Estimate It</string>
+    <string name="action_settings">Settings</string>
+    <string name="welcome_text">
+        "Welcome to the estimating game.\n\n"
+
+        "I hope to improve this later. For now, you can click the button below to begin playing."
+    </string>
+    <string name="start_button">Start Estimating</string>
+    <string name="title_activity_question">QuestionActivity</string>
+</resources>
