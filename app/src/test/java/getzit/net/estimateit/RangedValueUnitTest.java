@@ -2,7 +2,9 @@ package getzit.net.estimateit;
 
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
@@ -12,7 +14,7 @@ import static org.junit.Assert.fail;
 
 public class RangedValueUnitTest {
     private static final double[] POSITIVE_NUMBERS = {
-            12, 0, 3, 123.456, 1.1113
+            12, 0, 3, 123.456, 1.1113, 7.1, 234834, 234895.6, 2349345.12374
     };
     private static final String[] INVALID_STRINGS = {
             "",
@@ -25,7 +27,11 @@ public class RangedValueUnitTest {
             "9.9+0.1",
             "three",
             "7±two",
+            ".",
+            ".±.",
+            "12±.",
     };
+    private static final char[] MINUS_CHARS = { '-', '–' };
 
     @Test
     public void eitherOrderWorks() {
@@ -61,6 +67,26 @@ public class RangedValueUnitTest {
 
     static RangedValue randomRange(Random random) {
         return randomRange(random, 1e4);
+    }
+
+    static Iterable<String> getStringRepsForPositive(double value) {
+        List<String> strings = new ArrayList<>();
+        String normal = Double.toString(value);
+        strings.add(normal);
+        if (normal.endsWith(".0")) {
+            strings.add(normal.substring(0, normal.length() - 2));
+        } else {
+            strings.add(normal + '0');
+        }
+        if (normal.charAt(0) == '0') {
+            for (int i = strings.size() - 1; i >= 0; i--) {
+                String result = strings.get(i).substring(1);
+                if (result.length() > 0) {
+                    strings.add(result);
+                }
+            }
+        }
+        return strings;
     }
 
     @Test
@@ -134,7 +160,9 @@ public class RangedValueUnitTest {
     @Test
     public void parsesSingleNumbers() {
         for (double value : POSITIVE_NUMBERS) {
-            assertEquals(RangedValue.forExact(value), RangedValue.parse(Double.toString(value)));
+            for (String str : getStringRepsForPositive(value)) {
+                assertEquals(RangedValue.forExact(value), RangedValue.parse(str));
+            }
         }
     }
 
@@ -142,16 +170,24 @@ public class RangedValueUnitTest {
     public void parsesNegativeNumbers() {
         for (double value : POSITIVE_NUMBERS) {
             if (value == 0) continue;
-            assertEquals(RangedValue.forExact(-value), RangedValue.parse('–' + Double.toString(value)));
+            for (String str : getStringRepsForPositive(value)) {
+                for (char minus : MINUS_CHARS) {
+                    assertEquals(RangedValue.forExact(-value), RangedValue.parse(minus + str));
+                }
+            }
         }
     }
 
     @Test
     public void parsesBounds() {
         for (double value : POSITIVE_NUMBERS) {
-            for (double radius : POSITIVE_NUMBERS) {
-                assertEquals(RangedValue.forBounds(value, radius),
-                        RangedValue.parse(Double.toString(value) + '±' + Double.toString(radius)));
+            for (String valueStr : getStringRepsForPositive(value)) {
+                for (double radius : POSITIVE_NUMBERS) {
+                    for (String radiusStr : getStringRepsForPositive(radius)) {
+                        assertEquals(RangedValue.forBounds(value, radius),
+                                RangedValue.parse(valueStr + '±' + radiusStr));
+                    }
+                }
             }
         }
     }
@@ -159,9 +195,15 @@ public class RangedValueUnitTest {
     @Test
     public void parsesBoundsOnNegative() {
         for (double value : POSITIVE_NUMBERS) {
-            for (double radius : POSITIVE_NUMBERS) {
-                assertEquals(RangedValue.forBounds(-value, radius),
-                        RangedValue.parse('-' + Double.toString(value) + '±' + Double.toString(radius)));
+            for (String valueStr : getStringRepsForPositive(value)) {
+                for (double radius : POSITIVE_NUMBERS) {
+                    for (String radiusStr : getStringRepsForPositive(radius)) {
+                        for (char minus : MINUS_CHARS) {
+                            assertEquals(RangedValue.forBounds(-value, radius),
+                                    RangedValue.parse(minus + valueStr + '±' + radiusStr));
+                        }
+                    }
+                }
             }
         }
     }

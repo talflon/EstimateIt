@@ -64,8 +64,8 @@ public final class RangedValue {
     }
 
     static final Pattern p = Pattern.compile(
-            "([–-]? (?:\\d+\\.)?\\d+) # group 1, the central value\n"
-            + "(?:± ((?:\\d+\\.)?\\d+) )? # optional group 2, the radius\n",
+            "([–-]? (?:\\d*\\.)?\\d+) # group 1, the central value\n"
+            + "(?:± ((?:\\d*\\.)?\\d+) )? # optional group 2, the radius\n",
             Pattern.COMMENTS);
 
     public static RangedValue parse(CharSequence s) {
