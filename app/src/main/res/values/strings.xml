@@ -7,5 +7,8 @@
         "I hope to improve this later. For now, you can click the button below to begin playing."
     </string>
     <string name="start_button">Start Estimating</string>
-    <string name="title_activity_question">QuestionActivity</string>
+    <string name="next_question">Next</string>
+    <string name="answer_correct">Correct!</string>
+    <string name="answer_incorrect">Wrong.</string>
+    <string name="answer_invalid">Incomplete</string>
 </resources>

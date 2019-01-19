@@ -8,11 +8,13 @@ import android.support.v7.widget.Toolbar;
 import android.view.KeyEvent;
 import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import java.util.Random;
 
 public class QuestionActivity extends AppCompatActivity {
     private EditText answerInput;
+    private TextView resultText;
     private QuestionDisplay questionDisplay;
     private Question currentQuestion;
     private RandomGenerator<Question> questionGenerator;
@@ -33,6 +35,7 @@ public class QuestionActivity extends AppCompatActivity {
         questionDisplay = new TextViewQuestionDisplay(findViewById(R.id.questionText));
 
         answerInput = findViewById(R.id.answerInput);
+        resultText = findViewById(R.id.resultText);
 
         final KeyboardView keyboardView = findViewById(R.id.keyboard);
         keyboardView.setKeyboard(new Keyboard(this, R.xml.answer_keyboard));
@@ -44,10 +47,13 @@ public class QuestionActivity extends AppCompatActivity {
                         checkAnswer();
                         break;
                     default:
+                        resultText.setText("");
                         super.onKey(primaryCode, keyCodes);
                 }
             }
         });
+
+        findViewById(R.id.buttonNext).setOnClickListener(v -> nextQuestion());
 
         nextQuestion();
     }
@@ -63,7 +69,7 @@ public class QuestionActivity extends AppCompatActivity {
         questionDisplay.reset();
         currentQuestion.display(questionDisplay);
         answerInput.setText("");
-        answerInput.setBackgroundColor(getResources().getColor(R.color.colorAccent));
+        resultText.setText("");
     }
 
     public void checkAnswer() {
@@ -71,10 +77,10 @@ public class QuestionActivity extends AppCompatActivity {
         try {
             answer = RangedValue.parse(answerInput.getText());
         } catch (IllegalArgumentException e) {
-            // TODO
+            resultText.setText(R.string.answer_invalid);
             return;
         }
         boolean correct = answer.covers(currentQuestion.getAnswer());
-        answerInput.setBackgroundColor(getResources().getColor(correct ? R.color.correct : R.color.incorrect));
+        resultText.setText(correct ? R.string.answer_correct : R.string.answer_incorrect);
     }
 }

@@ -16,43 +16,46 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/resultView" />
+        app:layout_constraintBottom_toTopOf="@id/answerLine" />
 
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/resultView"
+        android:id="@+id/answerLine"
         android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/questionText"
-        app:layout_constraintBottom_toTopOf="@id/answerText"
-        android:visibility="gone">
+        app:layout_constraintBottom_toTopOf="@id/keyboard"
+        android:layout_margin="@dimen/text_margin">
+
+        <EditText
+            android:id="@+id/answerInput"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:textIsSelectable="true"
+            android:selectAllOnFocus="false"
+            android:cursorVisible="true"
+            android:inputType="text"
+            android:textCursorDrawable="@null"
+            tools:text="1300±50" />
 
         <TextView
+            android:id="@+id/resultText"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/text_margin"
+            android:layout_marginRight="@dimen/text_margin"
+            tools:text="@string/answer_correct" />
 
         <Button
+            android:id="@+id/buttonNext"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:text="@string/next_question" />
 
     </LinearLayout>
-
-    <EditText
-        android:id="@+id/answerInput"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/resultView"
-        app:layout_constraintBottom_toTopOf="@id/keyboard"
-        android:background="@color/colorAccent"
-        android:textIsSelectable="true"
-        android:selectAllOnFocus="false"
-        android:cursorVisible="true"
-        android:inputType="text"
-        android:textCursorDrawable="@null" />
 
     <android.inputmethodservice.KeyboardView
         android:id="@+id/keyboard"
@@ -60,7 +63,7 @@
         android:layout_height="wrap_content"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/answerText"
+        app:layout_constraintTop_toBottomOf="@id/answerLine"
         app:layout_constraintBottom_toBottomOf="parent" />
 
 </android.support.constraint.ConstraintLayout>
