@@ -24,7 +24,7 @@
         <Key android:keyLabel="0" android:keyOutputText="0" android:keyEdgeFlags="left" />
         <Key android:keyLabel="." android:keyOutputText="." />
         <Key android:keyLabel="±" android:keyOutputText="±" />
-        <!-- KEYCODE_ENTER -->
-        <Key android:keyLabel="OK" android:codes="66" android:keyEdgeFlags="right" />
+        <!-- KEYCODE_DONE -->
+        <Key android:keyLabel="" android:codes="-4" android:keyEdgeFlags="right" />
     </Row>
 </Keyboard>

@@ -1,11 +1,12 @@
 package getzit.net.estimateit;
 
 import android.inputmethodservice.Keyboard;
-import android.inputmethodservice.KeyboardView;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.KeyEvent;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -19,6 +20,7 @@ public class QuestionActivity extends AppCompatActivity {
     private Question currentQuestion;
     private RandomGenerator<Question> questionGenerator;
     private Random random;
+    private AnswerKeyboardView keyboardView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,19 +37,33 @@ public class QuestionActivity extends AppCompatActivity {
         questionDisplay = new TextViewQuestionDisplay(findViewById(R.id.questionText));
 
         answerInput = findViewById(R.id.answerInput);
+        answerInput.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                validateAnswerInput();
+            }
+        });
+
         resultText = findViewById(R.id.resultText);
 
-        final KeyboardView keyboardView = findViewById(R.id.keyboard);
+        keyboardView = findViewById(R.id.keyboard);
         keyboardView.setKeyboard(new Keyboard(this, R.xml.answer_keyboard));
         keyboardView.setOnKeyboardActionListener(new EditTextTyper(answerInput) {
             @Override
             public void onKey(int primaryCode, int[] keyCodes) {
                 switch (primaryCode) {
-                    case KeyEvent.KEYCODE_ENTER:
+                    case Keyboard.KEYCODE_DONE:
                         checkAnswer();
                         break;
                     default:
-                        resultText.setText("");
                         super.onKey(primaryCode, keyCodes);
                 }
             }
@@ -56,6 +72,13 @@ public class QuestionActivity extends AppCompatActivity {
         findViewById(R.id.buttonNext).setOnClickListener(v -> nextQuestion());
 
         nextQuestion();
+        validateAnswerInput();
+    }
+
+    private void validateAnswerInput() {
+        resultText.setText("");
+        keyboardView.setActionKeyLabel(
+                (parseAnswer() != null) ? getString(R.string.keylabel_check) : "");
     }
 
     @Override
@@ -72,12 +95,17 @@ public class QuestionActivity extends AppCompatActivity {
         resultText.setText("");
     }
 
-    public void checkAnswer() {
-        RangedValue answer;
+    private @Nullable RangedValue parseAnswer() {
         try {
-            answer = RangedValue.parse(answerInput.getText());
+            return RangedValue.parse(answerInput.getText());
         } catch (IllegalArgumentException e) {
-            resultText.setText(R.string.answer_invalid);
+            return null;
+        }
+    }
+
+    public void checkAnswer() {
+        RangedValue answer = parseAnswer();
+        if (answer == null) {
             return;
         }
         boolean correct = answer.covers(currentQuestion.getAnswer());

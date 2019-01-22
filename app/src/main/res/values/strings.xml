@@ -10,5 +10,5 @@
     <string name="next_question">Next</string>
     <string name="answer_correct">Correct!</string>
     <string name="answer_incorrect">Wrong.</string>
-    <string name="answer_invalid">Incomplete</string>
+    <string name="keylabel_check">Check</string>
 </resources>
