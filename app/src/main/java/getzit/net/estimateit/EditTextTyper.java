@@ -1,5 +1,6 @@
 package getzit.net.estimateit;
 
+import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.KeyboardView;
 import android.view.KeyEvent;
 import android.widget.EditText;
@@ -18,6 +19,7 @@ public class EditTextTyper implements KeyboardView.OnKeyboardActionListener {
                 backspace();
                 break;
             case KeyEvent.KEYCODE_FORWARD_DEL:
+            case Keyboard.KEYCODE_DELETE:
                 forwardDelete();
                 break;
             case KeyEvent.KEYCODE_CLEAR:
