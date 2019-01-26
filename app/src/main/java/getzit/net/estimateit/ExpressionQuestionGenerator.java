@@ -12,7 +12,7 @@ public class ExpressionQuestionGenerator implements RandomGenerator<Question> {
     static final char MULTIPLY = '×';
     static final char DIVIDE = '÷';
 
-    private final NumberFormat numberFormat = new DecimalFormat("#.########");
+    private final NumberFormat numberFormat = new DecimalFormat("#,###.########");
     private final RandomGenerator<Integer> lengthGenerator;
     private final RandomGenerator<RandomGenerator<Double>> numberGeneratorGenerator;
 
