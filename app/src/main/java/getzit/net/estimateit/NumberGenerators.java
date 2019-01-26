@@ -1,17 +1,21 @@
 package getzit.net.estimateit;
 
-import java.lang.Math;
+import java.util.Random;
 
 public final class NumberGenerators {
-    public static RandomGenerator<Integer> integerRange(int low, int high) {
-        return random -> low + random.nextInt(high - low);
+    public static int intTo(Random random, int low, int high) {
+        return random.nextInt(high - low) + low;
     }
 
-    public static RandomGenerator<Double> dbl(final double low, final double high, final double precision) {
-        return random -> Math.round((low + random.nextDouble() * (high - low)) / precision) * precision;
+    public static RandomGenerator<Integer> intTo(int low, int high) {
+        return r -> intTo(r, low, high);
     }
 
-    public static RandomGenerator<Double> dbl(final double radius, final double precision) {
-        return random -> Math.round(((random.nextInt(2) * 2 - 1) * random.nextDouble() * radius) * precision) / precision;
+    public static int intThru(Random random, int low, int high) {
+        return intTo(random, low, high + 1);
+    }
+
+    public static RandomGenerator<Integer> intThru(int low, int high) {
+        return r -> intThru(r, low, high);
     }
 }
