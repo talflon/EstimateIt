@@ -33,7 +33,15 @@ public class QuestionActivity extends AppCompatActivity {
         random = new Random();
         questionGenerator = new ExpressionQuestionGenerator(
                 NumberGenerators.integerRange(2, 6),
-                RandomGenerator.exactly(NumberGenerators.dbl(0.1, 1e6, 0.1)));
+                r1 -> {
+                    int baseScale = NumberGenerators.integerRange(-3, 6).generate(r1);
+                    return r2 -> {
+                        int scale = baseScale + NumberGenerators.integerRange(-2, 3).generate(r2);
+                        int precision = NumberGenerators.integerRange(1, 5).generate(r2);
+                        double minimum = Math.pow(10, scale - precision);
+                        return NumberGenerators.dbl(minimum, Math.pow(10, scale), minimum).generate(r2);
+                    };
+                });
         questionDisplay = new TextViewQuestionDisplay(findViewById(R.id.questionText));
 
         answerInput = findViewById(R.id.answerInput);
