@@ -67,6 +67,7 @@ public class QuestionActivity extends AppCompatActivity {
 
         keyboardView = findViewById(R.id.keyboard);
         keyboardView.setKeyboard(new Keyboard(this, R.xml.answer_keyboard));
+        keyboardView.setPreviewEnabled(false);
         keyboardView.setOnKeyboardActionListener(new EditTextTyper(answerInput) {
             @Override
             public void onKey(int primaryCode, int[] keyCodes) {

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Keyboard xmlns:android="http://schemas.android.com/apk/res/android">
+<Keyboard xmlns:android="http://schemas.android.com/apk/res/android"
+    android:keyWidth="20%">
     <Row>
         <Key android:keyLabel="7" android:keyOutputText="7" android:keyEdgeFlags="left" />
         <Key android:keyLabel="8" android:keyOutputText="8" />
@@ -26,6 +27,6 @@
         <Key android:keyLabel="." android:keyOutputText="." />
         <Key android:keyLabel="000" android:keyOutputText="000" />
         <!-- KEYCODE_DONE -->
-        <Key android:keyLabel="" android:codes="-4" android:keyEdgeFlags="right" />
+        <Key android:keyLabel="" android:codes="-4" android:keyEdgeFlags="right" android:keyWidth="40%" />
     </Row>
 </Keyboard>
