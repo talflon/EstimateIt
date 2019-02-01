@@ -18,4 +18,14 @@ public final class NumberGenerators {
     public static RandomGenerator<Integer> intThru(int low, int high) {
         return r -> intThru(r, low, high);
     }
+
+    public static RandomGenerator<Double> dblFromScaleAndPrecision(
+            RandomGenerator<Integer> scaleGenerator, RandomGenerator<Integer> precisionGenerator) {
+        return random -> {
+            int scale = scaleGenerator.generate(random);
+            int precision = precisionGenerator.generate(random);
+            double minimum = Math.pow(10, scale - precision);
+            return intTo(random, 1, (int) Math.pow(10, precision)) * minimum;
+        };
+    }
 }

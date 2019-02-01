@@ -29,8 +29,8 @@ public class ExpressionQuestionGeneratorUnitTest {
 
     @Test
     public void answerIsCorrect() {
-        Random random = new Random();
-        RandomGenerator<Double> numberGenerator = NumberGenerators.dbl(0, 1e6, 0.1);
+        Random random = new Random(0x7c854e664b4c27f5L);
+        RandomGenerator<Double> numberGenerator = NumberGenerators.dblFromScaleAndPrecision(RandomGenerator.exactly(-1), RandomGenerator.exactly(7));
         Context context = Context.enter();
         try {
             Scriptable scope = context.initSafeStandardObjects();

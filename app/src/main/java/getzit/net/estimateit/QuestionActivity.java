@@ -13,8 +13,8 @@ import android.widget.TextView;
 
 import java.util.Random;
 
+import static getzit.net.estimateit.NumberGenerators.dblFromScaleAndPrecision;
 import static getzit.net.estimateit.NumberGenerators.intThru;
-import static getzit.net.estimateit.NumberGenerators.intTo;
 
 public class QuestionActivity extends AppCompatActivity {
     private EditText answerInput;
@@ -36,14 +36,11 @@ public class QuestionActivity extends AppCompatActivity {
         random = new Random();
         questionGenerator = new ExpressionQuestionGenerator(
                 intThru(2, 5),
-                r1 -> {
-                    int baseScale = intThru(r1, -3, 5);
-                    return r2 -> {
-                        int scale = baseScale + intThru(r2, -2, 3);
-                        int precision = intThru(r2, 1, 4);
-                        double minimum = Math.pow(10, scale - precision);
-                        return intTo(r2, 1, (int) Math.pow(10, precision)) * minimum;
-                    };
+                r -> {
+                    int baseScale = intThru(r, -3, 5);
+                    return dblFromScaleAndPrecision(
+                            intThru(baseScale - 2, baseScale + 2),
+                            intThru(1, 4));
                 });
         questionDisplay = new TextViewQuestionDisplay(findViewById(R.id.questionText));
 
