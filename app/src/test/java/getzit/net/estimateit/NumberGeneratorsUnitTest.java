@@ -73,7 +73,7 @@ public class NumberGeneratorsUnitTest {
         RandomGenerator<Integer> precisionGenerator = mock(RandomGenerator.class);
         when(scaleGenerator.generate(Mockito.any())).thenReturn(1);
         when(precisionGenerator.generate(Mockito.any())).thenReturn(2);
-        NumberGenerators.dblFromScaleAndPrecision(scaleGenerator, precisionGenerator).generate(random);
+        NumberGenerators.nextDblFromScaleAndPrecision(random, scaleGenerator, precisionGenerator);
         verify(scaleGenerator).generate(random);
         verify(precisionGenerator).generate(random);
     }
