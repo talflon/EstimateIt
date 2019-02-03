@@ -15,6 +15,7 @@ import java.util.Random;
 
 import static getzit.net.estimateit.NumberGenerators.dblFromScaleAndPrecision;
 import static getzit.net.estimateit.NumberGenerators.intThru;
+import static getzit.net.estimateit.NumberGenerators.nextIntThru;
 
 public class QuestionActivity extends AppCompatActivity {
     private EditText answerInput;
@@ -34,13 +35,14 @@ public class QuestionActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         random = new Random();
+        RandomGenerator<Double> sqrtDistribution = r -> 1.0 - Math.sqrt(r.nextDouble());
         questionGenerator = new ExpressionQuestionGenerator(
-                intThru(2, 5),
+                intThru(2, 5, sqrtDistribution),
                 r -> {
-                    int baseScale = NumberGenerators.nextIntThru(r, -3, 5);
+                    int baseScale = nextIntThru(r, -3, 5);
                     return dblFromScaleAndPrecision(
                             intThru(baseScale - 2, baseScale + 2),
-                            intThru(1, 4));
+                            intThru(1, 4, sqrtDistribution));
                 });
         questionDisplay = new TextViewQuestionDisplay(findViewById(R.id.questionText));
 
