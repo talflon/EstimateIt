@@ -48,7 +48,6 @@ public class NumberGeneratorsUnitTest {
                 double lowTarget = 2 * Math.pow(10, scale - precision);
                 boolean foundHighTarget = false, foundLowTarget = false;
                 long tries = (long) Math.pow(10, precision * 2 + 1);
-                System.out.println(tries);
                 for (long k = 0; k < tries && !(foundHighTarget && foundLowTarget); k++) {
                     double value = dbl.generate(random);
                     if (value > highTarget) {
@@ -77,5 +76,37 @@ public class NumberGeneratorsUnitTest {
         NumberGenerators.dblFromScaleAndPrecision(scaleGenerator, precisionGenerator).generate(random);
         verify(scaleGenerator).generate(random);
         verify(precisionGenerator).generate(random);
+    }
+
+    void testIntToFitsRange(Random random, RandomGenerator<Integer> generator, int low, int high) {
+        int tries = high - low;
+        tries = tries * tries * 10;
+        int minFound = Integer.MAX_VALUE, maxFound = Integer.MIN_VALUE;
+        for (int i = 0; i < tries; i++) {
+            int value = generator.generate(random);
+            assertTrue(value + " outside of (" + low + ", " + high + ")",
+                    low <= value && value < high);
+            minFound = Math.min(minFound, value);
+            maxFound = Math.max(maxFound, value);
+        }
+        assertEquals(minFound, low);
+        assertEquals(maxFound, high - 1);
+    }
+
+    @Test
+    public void testIntToFitsRange() {
+        Random random = new Random(0xc8368f3026840274L);
+        testIntToFitsRange(random, NumberGenerators.intTo(3, 17), 3, 17);
+    }
+
+    @Test
+    public void testIntToWithUnitSquareDistributionFitsRange() {
+        Random random = new Random(0xfd859401db2451e4L);
+        testIntToFitsRange(random, NumberGenerators.intTo(3, 17, Random::nextDouble), 3, 17);
+    }
+
+    @Test
+    public void testIntToWithDistribution() {
+        assertEquals(4, NumberGenerators.intTo(mock(Random.class), 1, 5, r -> 0.75));
     }
 }

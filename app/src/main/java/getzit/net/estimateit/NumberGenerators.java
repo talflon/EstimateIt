@@ -7,16 +7,32 @@ public final class NumberGenerators {
         return random.nextInt(high - low) + low;
     }
 
+    public static int intTo(Random random, int low, int high, RandomGenerator<Double> distribution) {
+        return ((int) (distribution.generate(random) * (high - low))) + low;
+    }
+
     public static RandomGenerator<Integer> intTo(int low, int high) {
         return r -> intTo(r, low, high);
+    }
+
+    public static RandomGenerator<Integer> intTo(int low, int high, RandomGenerator<Double> distribution) {
+        return r -> intTo(r, low, high, distribution);
     }
 
     public static int intThru(Random random, int low, int high) {
         return intTo(random, low, high + 1);
     }
 
+    public static int intThru(Random random, int low, int high, RandomGenerator<Double> distribution) {
+        return intTo(random, low, high + 1, distribution);
+    }
+
     public static RandomGenerator<Integer> intThru(int low, int high) {
         return r -> intThru(r, low, high);
+    }
+
+    public static RandomGenerator<Integer> intThru(int low, int high, RandomGenerator<Double> distribution) {
+        return r -> intThru(r, low, high, distribution);
     }
 
     public static RandomGenerator<Double> dblFromScaleAndPrecision(
