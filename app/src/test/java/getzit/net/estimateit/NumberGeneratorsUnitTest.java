@@ -1,12 +1,13 @@
 package getzit.net.estimateit;
 
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import java.util.Random;
 
+import static getzit.net.estimateit.NumberGenerators.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -18,7 +19,7 @@ public class NumberGeneratorsUnitTest {
         for (int i = 0; i < 1000; i++) {
             int scale = random.nextInt(10) - 4;
             int precision = random.nextInt(5) + 1;
-            RandomGenerator<Double> dbl = NumberGenerators.dblFromScaleAndPrecision(
+            RandomGenerator<Double> dbl = dblFromScaleAndPrecision(
                     RandomGenerator.exactly(scale), RandomGenerator.exactly(precision));
             for (int k = 0; k < 100; k++) {
                 double value = dbl.generate(random);
@@ -42,7 +43,7 @@ public class NumberGeneratorsUnitTest {
         Random random = new Random(0xf58b21a07a346f79L);
         for (int scale = -3; scale <= 4; scale++) {
             for (int precision = 1; precision <= 4; precision++) {
-                RandomGenerator<Double> dbl = NumberGenerators.dblFromScaleAndPrecision(
+                RandomGenerator<Double> dbl = dblFromScaleAndPrecision(
                         RandomGenerator.exactly(scale), RandomGenerator.exactly(precision));
                 double highTarget = 8 * Math.pow(10, scale - 1);
                 double lowTarget = 2 * Math.pow(10, scale - precision);
@@ -71,11 +72,16 @@ public class NumberGeneratorsUnitTest {
         Random random = new Random(0x7c854e664b4c27f5L);
         RandomGenerator<Integer> scaleGenerator = mock(RandomGenerator.class);
         RandomGenerator<Integer> precisionGenerator = mock(RandomGenerator.class);
-        when(scaleGenerator.generate(Mockito.any())).thenReturn(1);
-        when(precisionGenerator.generate(Mockito.any())).thenReturn(2);
-        NumberGenerators.nextDblFromScaleAndPrecision(random, scaleGenerator, precisionGenerator);
+        when(scaleGenerator.generate(any())).thenReturn(1);
+        when(precisionGenerator.generate(any())).thenReturn(2);
+        nextDblFromScaleAndPrecision(random, scaleGenerator, precisionGenerator);
         verify(scaleGenerator).generate(random);
         verify(precisionGenerator).generate(random);
+    }
+
+    private static void assertBetween(int value, int low, int high) {
+        assertTrue(value + " outside of (" + low + ", " + high + ")",
+                low <= value && value < high);
     }
 
     void testIntToFitsRange(Random random, RandomGenerator<Integer> generator, int low, int high) {
@@ -84,8 +90,7 @@ public class NumberGeneratorsUnitTest {
         int minFound = Integer.MAX_VALUE, maxFound = Integer.MIN_VALUE;
         for (int i = 0; i < tries; i++) {
             int value = generator.generate(random);
-            assertTrue(value + " outside of (" + low + ", " + high + ")",
-                    low <= value && value < high);
+            assertBetween(value, low, high);
             minFound = Math.min(minFound, value);
             maxFound = Math.max(maxFound, value);
         }
@@ -96,17 +101,65 @@ public class NumberGeneratorsUnitTest {
     @Test
     public void testIntToFitsRange() {
         Random random = new Random(0xc8368f3026840274L);
-        testIntToFitsRange(random, NumberGenerators.intTo(3, 17), 3, 17);
+        testIntToFitsRange(random, intTo(3, 17), 3, 17);
     }
 
     @Test
     public void testIntToWithUnitSquareDistributionFitsRange() {
         Random random = new Random(0xfd859401db2451e4L);
-        testIntToFitsRange(random, NumberGenerators.intTo(3, 17, Random::nextDouble), 3, 17);
+        testIntToFitsRange(random, intTo(3, 17, Random::nextDouble), 3, 17);
     }
 
     @Test
     public void testIntToWithDistribution() {
-        assertEquals(4, NumberGenerators.nextIntTo(mock(Random.class), 1, 5, r -> 0.75));
+        assertEquals(4, nextIntTo(mock(Random.class), 1, 5, r -> 0.75));
+    }
+
+    private static class GeneratorOf<T> implements RandomGenerator<T> {
+        private T[] values;
+        private int index = 0;
+
+        public GeneratorOf(T... values) {
+            this.values = values;
+        }
+
+        @Override
+        public T generate(Random random) {
+            return values[index++];
+        }
+    }
+
+    @Test(timeout = 1000)
+    public void testIntToWithDistributionTooHighStaysInRange() {
+        assertBetween(
+                nextIntThru(mock(Random.class), -1, 8,
+                        new GeneratorOf<>(3.0, 2.0, 1.0, 0.5)),
+                -1, 8);
+    }
+
+    @Test(timeout = 1000)
+    public void testIntToWithDistributionTooLowStaysInRange() {
+        assertBetween(
+                nextIntThru(mock(Random.class), -1, 8,
+                        new GeneratorOf<>(-2.0, -1.0, 0.0)),
+                -1, 8);
+    }
+
+    @Test(timeout = 2000)
+    public void testIntToWithDistributionNoHangHigh() {
+        try {
+            nextIntTo(mock(Random.class), 0, 1, r -> 2.0);
+        } catch (RuntimeException e) {
+            /* pass -- just testing for hang */
+        }
+    }
+
+    @Test(timeout = 2000)
+    public void testIntToWithDistributionNoHangLow() {
+        try {
+            nextIntTo(mock(Random.class), 0, 1, r -> -0.5);
+        } catch (RuntimeException e) {
+            /* pass -- just testing for hang */
+        }
     }
 }

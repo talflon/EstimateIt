@@ -8,7 +8,15 @@ public final class NumberGenerators {
     }
 
     public static int nextIntTo(Random random, int low, int high, RandomGenerator<Double> distribution) {
-        return ((int) (distribution.generate(random) * (high - low))) + low;
+        double index;
+        int tries = 0;
+        do {
+            if (tries++ > 10000) {
+                throw new RuntimeException("Couldn't generate a value in [0.0, 1.0)");
+            }
+            index = distribution.generate(random);
+        } while (!(0.0 <= index && index < 1.0));
+        return ((int) (index * (high - low))) + low;
     }
 
     public static RandomGenerator<Integer> intTo(int low, int high) {
