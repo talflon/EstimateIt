@@ -43,8 +43,23 @@ public final class NumberGenerators {
         return nextIntTo(random, 1, (int) Math.pow(10, precision)) * minimum;
     }
 
+    public static double nextDblFromScaleAndPrecision(
+            Random random, RandomGenerator<Integer> scaleGenerator, RandomGenerator<Integer> precisionGenerator,
+            RandomGenerator<Double> distribution) {
+        int scale = scaleGenerator.generate(random);
+        int precision = precisionGenerator.generate(random);
+        double minimum = Math.pow(10, scale - precision);
+        return nextIntTo(random, 1, (int) Math.pow(10, precision), distribution) * minimum;
+    }
+
     public static RandomGenerator<Double> dblFromScaleAndPrecision(
             RandomGenerator<Integer> scaleGenerator, RandomGenerator<Integer> precisionGenerator) {
         return random -> nextDblFromScaleAndPrecision(random, scaleGenerator, precisionGenerator);
+    }
+
+    public static RandomGenerator<Double> dblFromScaleAndPrecision(
+            RandomGenerator<Integer> scaleGenerator, RandomGenerator<Integer> precisionGenerator,
+            RandomGenerator<Double> distribution) {
+        return random -> nextDblFromScaleAndPrecision(random, scaleGenerator, precisionGenerator, distribution);
     }
 }
