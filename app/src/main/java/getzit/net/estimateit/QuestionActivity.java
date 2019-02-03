@@ -37,7 +37,7 @@ public class QuestionActivity extends AppCompatActivity {
         questionGenerator = new ExpressionQuestionGenerator(
                 intThru(2, 5),
                 r -> {
-                    int baseScale = intThru(r, -3, 5);
+                    int baseScale = NumberGenerators.nextIntThru(r, -3, 5);
                     return dblFromScaleAndPrecision(
                             intThru(baseScale - 2, baseScale + 2),
                             intThru(1, 4));

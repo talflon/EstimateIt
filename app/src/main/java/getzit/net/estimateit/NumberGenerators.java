@@ -3,36 +3,36 @@ package getzit.net.estimateit;
 import java.util.Random;
 
 public final class NumberGenerators {
-    public static int intTo(Random random, int low, int high) {
+    public static int nextIntTo(Random random, int low, int high) {
         return random.nextInt(high - low) + low;
     }
 
-    public static int intTo(Random random, int low, int high, RandomGenerator<Double> distribution) {
+    public static int nextIntTo(Random random, int low, int high, RandomGenerator<Double> distribution) {
         return ((int) (distribution.generate(random) * (high - low))) + low;
     }
 
     public static RandomGenerator<Integer> intTo(int low, int high) {
-        return r -> intTo(r, low, high);
+        return r -> nextIntTo(r, low, high);
     }
 
     public static RandomGenerator<Integer> intTo(int low, int high, RandomGenerator<Double> distribution) {
-        return r -> intTo(r, low, high, distribution);
+        return r -> nextIntTo(r, low, high, distribution);
     }
 
-    public static int intThru(Random random, int low, int high) {
-        return intTo(random, low, high + 1);
+    public static int nextIntThru(Random random, int low, int high) {
+        return nextIntTo(random, low, high + 1);
     }
 
-    public static int intThru(Random random, int low, int high, RandomGenerator<Double> distribution) {
-        return intTo(random, low, high + 1, distribution);
+    public static int nextIntThru(Random random, int low, int high, RandomGenerator<Double> distribution) {
+        return nextIntTo(random, low, high + 1, distribution);
     }
 
     public static RandomGenerator<Integer> intThru(int low, int high) {
-        return r -> intThru(r, low, high);
+        return r -> nextIntThru(r, low, high);
     }
 
     public static RandomGenerator<Integer> intThru(int low, int high, RandomGenerator<Double> distribution) {
-        return r -> intThru(r, low, high, distribution);
+        return r -> nextIntThru(r, low, high, distribution);
     }
 
     public static RandomGenerator<Double> dblFromScaleAndPrecision(
@@ -41,7 +41,7 @@ public final class NumberGenerators {
             int scale = scaleGenerator.generate(random);
             int precision = precisionGenerator.generate(random);
             double minimum = Math.pow(10, scale - precision);
-            return intTo(random, 1, (int) Math.pow(10, precision)) * minimum;
+            return nextIntTo(random, 1, (int) Math.pow(10, precision)) * minimum;
         };
     }
 }

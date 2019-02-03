@@ -107,6 +107,6 @@ public class NumberGeneratorsUnitTest {
 
     @Test
     public void testIntToWithDistribution() {
-        assertEquals(4, NumberGenerators.intTo(mock(Random.class), 1, 5, r -> 0.75));
+        assertEquals(4, NumberGenerators.nextIntTo(mock(Random.class), 1, 5, r -> 0.75));
     }
 }
