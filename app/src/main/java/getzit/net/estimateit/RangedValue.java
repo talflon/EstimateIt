@@ -74,7 +74,7 @@ public final class RangedValue {
             throw new IllegalArgumentException("Could not parse \"" + s + '"');
         }
         double value = Double.parseDouble(m.group(1).replace('–', '-'));
-        double radius = (m.group(2) == null) ? 0.0 : Double.parseDouble(m.group(2));
+        double radius = (m.group(2) == null) ? 0.0 : Double.parseDouble(m.group(2).replace('–', '-'));
         return RangedValue.forBounds(value, radius);
     }
 

@@ -3,10 +3,12 @@ package getzit.net.estimateit;
 import org.junit.Test;
 
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Random;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -15,7 +17,10 @@ import static org.junit.Assert.fail;
 
 public class RangedValueUnitTest {
     private static final double[] POSITIVE_NUMBERS = {
-            12, 0, 3, 123.456, 1.1113, 7.1, 234834, 234895.6, 2349345.12374, 0.000213, 0.01,
+            12, 3, 123.456, 1.1113, 7.1, 234834, 234895.6, 2349345.12374, 0.000213, 0.01,
+    };
+    private static final String[] ZERO_REPS = {
+            "0", "0.0", "0.00",
     };
     private static final String[] INVALID_STRINGS = {
             "",
@@ -32,7 +37,7 @@ public class RangedValueUnitTest {
             ".±.",
             "12±.",
     };
-    private static final char[] MINUS_CHARS = { '-', '–' };
+    private static final String[] MINUS_CHARS = { "-", "–" };
 
     @Test
     public void eitherOrderWorks() {
@@ -72,24 +77,88 @@ public class RangedValueUnitTest {
 
     static final DecimalFormat decimalFormat = new DecimalFormat("0.0###########");
 
-    static Iterable<String> getStringRepsForPositive(double value) {
-        List<String> strings = new ArrayList<>();
+    static class ParseExample {
+        final RangedValue value;
+        final String asString;
+
+        ParseExample(RangedValue value, String asString) {
+            this.value = value;
+            this.asString = asString;
+        }
+    }
+
+    static Stream<String> nonNegativeReps(double value) {
         String normal = decimalFormat.format(value);
-        strings.add(normal);
+        String otherZero;
         if (normal.endsWith(".0")) {
-            strings.add(normal.substring(0, normal.length() - 2));
+            otherZero = normal.substring(0, normal.length() - 2);
         } else {
-            strings.add(normal + '0');
+            otherZero = normal + '0';
         }
         if (normal.charAt(0) == '0') {
-            for (int i = strings.size() - 1; i >= 0; i--) {
-                String result = strings.get(i).substring(1);
-                if (result.length() > 0) {
-                    strings.add(result);
-                }
-            }
+            return Stream.of(normal, otherZero, normal.substring(1), otherZero.substring(1));
+        } else {
+            return Stream.of(normal, otherZero);
         }
-        return strings;
+    }
+
+    static Stream<String> exponentReps(int exponent) {
+        if (exponent >= 0) {
+            return Stream.of(Integer.toString(exponent));
+        } else {
+            return Stream.of(Integer.toString(exponent), '–' + Integer.toString(-exponent));
+        }
+    }
+
+    static Stream<ParseExample> negativeExactExamples(Stream<ParseExample> positiveExactExamples) {
+        return positiveExactExamples.flatMap(positiveExample ->
+                Arrays.stream(MINUS_CHARS).map(minus ->
+                        new ParseExample(
+                                RangedValue.forExact(-positiveExample.value.getLowerValue()),
+                                minus + positiveExample.asString)));
+    }
+
+    // XXX This works, but is terrible. Rewrite as random generation?
+    static Stream<ParseExample> parseExamples() {
+        Supplier<Stream<ParseExample>> zeroSimples = () -> Arrays.stream(ZERO_REPS)
+                .map(s -> new ParseExample(RangedValue.forExact(0), s));
+        Supplier<Stream<ParseExample>> positiveSimples = () -> Arrays.stream(POSITIVE_NUMBERS)
+                .mapToObj(value -> nonNegativeReps(value)
+                        .map(s -> new ParseExample(RangedValue.forExact(value), s))
+                ).flatMap(Function.identity());
+        Supplier<Stream<ParseExample>> nonNegativeSimples = () -> Stream.concat(positiveSimples.get(), zeroSimples.get());
+        Supplier<Stream<ParseExample>> negativeSimples = () -> negativeExactExamples(positiveSimples.get());
+        Supplier<Stream<ParseExample>> simples = () -> Stream.concat(nonNegativeSimples.get(), negativeSimples.get());
+
+        Supplier<Stream<ParseExample>> positiveExponents = () -> Arrays.stream(POSITIVE_NUMBERS)
+                .mapToObj(value -> {
+                    int naturalExponent = (int) Math.floor(Math.log10(value));
+                    RangedValue rv = RangedValue.forExact(value);
+                    return IntStream.range(naturalExponent - 1, naturalExponent + 1)
+                            .mapToObj(exponent -> {
+                                double significand = value / Math.pow(10, exponent);
+                                return nonNegativeReps(significand).flatMap(significandRep ->
+                                        exponentReps(exponent).map(exponentRep ->
+                                                new ParseExample(rv, significandRep + "E" + exponentRep)));
+                            }).flatMap(Function.identity());
+                }).flatMap(Function.identity());
+        Supplier<Stream<ParseExample>> zeroExponents = () -> Arrays.stream(ZERO_REPS).flatMap(zeroRep ->
+                IntStream.range(-1, 1)
+                        .mapToObj(RangedValueUnitTest::exponentReps)
+                        .flatMap(reps -> reps.map(exRep ->
+                                new ParseExample(RangedValue.forExact(0), zeroRep + "E" + exRep))));
+        Supplier<Stream<ParseExample>> nonNegativeExponents = () -> Stream.concat(positiveExponents.get(), zeroExponents.get());
+        Supplier<Stream<ParseExample>> negativeExponents = () -> negativeExactExamples(positiveExponents.get());
+        Supplier<Stream<ParseExample>> exponents = () -> Stream.concat(nonNegativeExponents.get(), negativeExponents.get());
+
+        Supplier<Stream<ParseExample>> exacts = () -> Stream.concat(simples.get(), exponents.get());
+        Supplier<Stream<ParseExample>> bounds = () -> Stream.concat(nonNegativeSimples.get(), nonNegativeExponents.get());
+        Supplier<Stream<ParseExample>> withBounds = () -> exacts.get().flatMap(valueExample -> bounds.get().map(radiusExample ->
+                new ParseExample(
+                        RangedValue.forBounds(valueExample.value.getLowerValue(), radiusExample.value.getLowerValue()),
+                        valueExample.asString + '±' + radiusExample.asString)));
+
+        return Stream.concat(exacts.get(), withBounds.get());
     }
 
     @Test
@@ -168,85 +237,8 @@ public class RangedValueUnitTest {
     }
 
     @Test
-    public void parsesSingleNumbers() {
-        for (double value : POSITIVE_NUMBERS) {
-            for (String str : getStringRepsForPositive(value)) {
-                assertParses(RangedValue.forExact(value), str);
-            }
-        }
-    }
-
-    @Test
-    public void parsesNegativeNumbers() {
-        for (double value : POSITIVE_NUMBERS) {
-            if (value == 0) continue;
-            for (String str : getStringRepsForPositive(value)) {
-                for (char minus : MINUS_CHARS) {
-                    assertParses(RangedValue.forExact(-value), minus + str);
-                }
-            }
-        }
-    }
-
-    @Test
-    public void parsesBounds() {
-        for (double value : POSITIVE_NUMBERS) {
-            for (String valueStr : getStringRepsForPositive(value)) {
-                for (double radius : POSITIVE_NUMBERS) {
-                    for (String radiusStr : getStringRepsForPositive(radius)) {
-                        assertParses(RangedValue.forBounds(value, radius),
-                                valueStr + '±' + radiusStr);
-                    }
-                }
-            }
-        }
-    }
-
-    @Test
-    public void parsesBoundsOnNegative() {
-        for (double value : POSITIVE_NUMBERS) {
-            for (String valueStr : getStringRepsForPositive(value)) {
-                for (double radius : POSITIVE_NUMBERS) {
-                    for (String radiusStr : getStringRepsForPositive(radius)) {
-                        for (char minus : MINUS_CHARS) {
-                            assertParses(RangedValue.forBounds(-value, radius),
-                                    minus + valueStr + '±' + radiusStr);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    @Test
-    public void parsesExponents() {
-        for (double value : POSITIVE_NUMBERS) {
-            int naturalExponent = (int) Math.floor(Math.log10(value));
-            for (int exponent = naturalExponent - 1; exponent <= naturalExponent + 1; exponent++) {
-                double significand = value / Math.pow(10, exponent);
-                for (String significandStr : getStringRepsForPositive(significand)) {
-                    assertParses(RangedValue.forExact(value), significandStr + "E" + exponent);
-                }
-            }
-        }
-    }
-
-    @Test
-    public void parsesExponentsInBounds() {
-        for (double value : POSITIVE_NUMBERS) {
-            for (String valueStr : getStringRepsForPositive(value)) {
-                for (double radius : POSITIVE_NUMBERS) {
-                    int naturalExponent = (int) Math.floor(Math.log10(radius));
-                    for (int exponent = naturalExponent - 1; exponent <= naturalExponent + 1; exponent++) {
-                        double significand = radius / Math.pow(10, exponent);
-                        for (String significandStr : getStringRepsForPositive(significand)) {
-                            assertParses(RangedValue.forBounds(value, radius),
-                                    valueStr + '±' + significandStr + "E" + exponent);
-                        }
-                    }
-                }
-            }
-        }
+    public void parsesCorrectInput() {
+        parseExamples().forEach(example -> assertParses(example.value, example.asString));
     }
 
     @Test
