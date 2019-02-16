@@ -2,6 +2,7 @@ package getzit.net.estimateit;
 
 import org.junit.Test;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -14,7 +15,7 @@ import static org.junit.Assert.fail;
 
 public class RangedValueUnitTest {
     private static final double[] POSITIVE_NUMBERS = {
-            12, 0, 3, 123.456, 1.1113, 7.1, 234834, 234895.6, 2349345.12374
+            12, 0, 3, 123.456, 1.1113, 7.1, 234834, 234895.6, 2349345.12374, 0.000213, 0.01,
     };
     private static final String[] INVALID_STRINGS = {
             "",
@@ -69,9 +70,11 @@ public class RangedValueUnitTest {
         return randomRange(random, 1e4);
     }
 
+    static final DecimalFormat decimalFormat = new DecimalFormat("0.0###########");
+
     static Iterable<String> getStringRepsForPositive(double value) {
         List<String> strings = new ArrayList<>();
-        String normal = Double.toString(value);
+        String normal = decimalFormat.format(value);
         strings.add(normal);
         if (normal.endsWith(".0")) {
             strings.add(normal.substring(0, normal.length() - 2));
@@ -157,11 +160,18 @@ public class RangedValueUnitTest {
         }
     }
 
+    private static void assertParses(RangedValue expected, CharSequence str) {
+        RangedValue actual = RangedValue.parse(str);
+        if (!expected.equals(actual)) {
+            fail("Parsed «" + str + "» as " + actual + " instead of " + expected);
+        }
+    }
+
     @Test
     public void parsesSingleNumbers() {
         for (double value : POSITIVE_NUMBERS) {
             for (String str : getStringRepsForPositive(value)) {
-                assertEquals(RangedValue.forExact(value), RangedValue.parse(str));
+                assertParses(RangedValue.forExact(value), str);
             }
         }
     }
@@ -172,7 +182,7 @@ public class RangedValueUnitTest {
             if (value == 0) continue;
             for (String str : getStringRepsForPositive(value)) {
                 for (char minus : MINUS_CHARS) {
-                    assertEquals(RangedValue.forExact(-value), RangedValue.parse(minus + str));
+                    assertParses(RangedValue.forExact(-value), minus + str);
                 }
             }
         }
@@ -184,8 +194,8 @@ public class RangedValueUnitTest {
             for (String valueStr : getStringRepsForPositive(value)) {
                 for (double radius : POSITIVE_NUMBERS) {
                     for (String radiusStr : getStringRepsForPositive(radius)) {
-                        assertEquals(RangedValue.forBounds(value, radius),
-                                RangedValue.parse(valueStr + '±' + radiusStr));
+                        assertParses(RangedValue.forBounds(value, radius),
+                                valueStr + '±' + radiusStr);
                     }
                 }
             }
@@ -199,8 +209,39 @@ public class RangedValueUnitTest {
                 for (double radius : POSITIVE_NUMBERS) {
                     for (String radiusStr : getStringRepsForPositive(radius)) {
                         for (char minus : MINUS_CHARS) {
-                            assertEquals(RangedValue.forBounds(-value, radius),
-                                    RangedValue.parse(minus + valueStr + '±' + radiusStr));
+                            assertParses(RangedValue.forBounds(-value, radius),
+                                    minus + valueStr + '±' + radiusStr);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    public void parsesExponents() {
+        for (double value : POSITIVE_NUMBERS) {
+            int naturalExponent = (int) Math.floor(Math.log10(value));
+            for (int exponent = naturalExponent - 1; exponent <= naturalExponent + 1; exponent++) {
+                double significand = value / Math.pow(10, exponent);
+                for (String significandStr : getStringRepsForPositive(significand)) {
+                    assertParses(RangedValue.forExact(value), significandStr + "E" + exponent);
+                }
+            }
+        }
+    }
+
+    @Test
+    public void parsesExponentsInBounds() {
+        for (double value : POSITIVE_NUMBERS) {
+            for (String valueStr : getStringRepsForPositive(value)) {
+                for (double radius : POSITIVE_NUMBERS) {
+                    int naturalExponent = (int) Math.floor(Math.log10(radius));
+                    for (int exponent = naturalExponent - 1; exponent <= naturalExponent + 1; exponent++) {
+                        double significand = radius / Math.pow(10, exponent);
+                        for (String significandStr : getStringRepsForPositive(significand)) {
+                            assertParses(RangedValue.forBounds(value, radius),
+                                    valueStr + '±' + significandStr + "E" + exponent);
                         }
                     }
                 }
